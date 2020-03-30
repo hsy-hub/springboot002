@@ -1,0 +1,29 @@
+server:
+  port: 8086 #服务器启动端口
+  servlet:
+    context-path: /mytest/
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    username: root
+    password: 123456
+    url: jdbc:mysql://localhost:3306/demo?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  application:
+    name: springboot002
+  mvc:
+    view:
+      prefix: /page/
+      suffix: .html
+  mail:
+    host: smtp.qq.com
+    username: 3118068186@qq.com
+    password: cnkfgmzvyuokdcgf
+
+#  resources:
+#    static-locations: classpath:static/*html
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.example.demo.pojo
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl #控制台打印log

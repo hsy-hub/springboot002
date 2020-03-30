@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.demo.mapper.CourseMapper">
+
+    <!--选课列表-->
+    <resultMap id="courseMap" type="course">
+        <id property="id" column="id"></id>
+        <!--<result property="courseName" column="courseName"></result>-->
+        <result property="credit" column="credit"></result>
+        <result property="address" column="address"></result>
+        <result property="userName" column="userName"></result>
+        <association property="major" javaType="major">
+            <id property="id" column="majorId"></id>
+            <result property="majorName" column="majorName"></result>
+        </association>
+        <association property="courseList" javaType="courseList">
+            <id property="id" column="courselistId"></id>
+            <result property="courseName" column="courseName"></result>
+        </association>
+    </resultMap>
+
+    <select id="getCourseAllInOne" parameterType="courseParam" resultMap="courseMap">
+        SELECT o.*,m.`majorName`,l.courseName FROM course AS o LEFT JOIN major AS m ON o.majorId=m.`id`
+        left join courselist as l on o.courselistId=l.id
+        <where>
+            <if test="courselistId != null and courselistId != ''">
+                and courselistId like '%${courselistId}%'
+            </if>
+        </where>
+    </select>
+
+    <select id="selectCount" resultType="integer" parameterType="courseParam">
+        select count(*) from course
+        <where>
+            <if test="courselistId != null and courselistId != ''">
+                and courselistId=#{courselistId}
+            </if>
+        </where>
+    </select>
+
+    <!--得到所有专业-->
+    <select id="getMajorList" resultType="major">
+        select * from major
+    </select>
+    <!--得到所有课程-->
+    <select id="getCourseList" parameterType="integer" resultType="courseList">
+        select courseName from courselist where majorId=#{majorId}
+    </select>
+    <!--选课-->
+    <insert id="addCourse" parameterType="Course">
+        insert into course value(#{id},#{courselistId},#{credit},#{address},#{majorId},#{userName})
+    </insert>
+    <!--删除选课-->
+    <delete id="deleteCourse" parameterType="list">
+        delete from course where id in
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+
+    <!--课程列表-->
+    <resultMap id="courseListMap" type="courseList">
+        <id property="id" column="id"></id>
+        <result property="courseName" column="courseName"></result>
+        <result property="credit" column="credit"></result>
+        <result property="address" column="address"></result>
+        <association property="major" javaType="major">
+            <id property="id" column="majorId"></id>
+            <result property="majorName" column="majorName"></result>
+        </association>
+    </resultMap>
+    <select id="getCourseListAllInOne" parameterType="courseListParam" resultMap="courseListMap">
+        SELECT l.*,m.`majorName` FROM courselist AS l LEFT JOIN major AS m ON l.majorId=m.`id`
+        <where>
+            <if test="courseName != null and courseName != ''">
+                and courseName like '%${courseName}%'
+            </if>
+        </where>
+    </select>
+    <select id="selectCount1" resultType="integer" parameterType="courseListParam">
+        select count(*) from courselist
+        <where>
+            <if test="courseName != null and courseName != ''">
+                and courseName=#{courseName}
+            </if>
+        </where>
+    </select>
+
+    <insert id="addCourseList" parameterType="CourseList">
+       insert into courselist value (null,#{courseName},#{credit},#{address},#{majorId})
+    </insert>
+
+    <delete id="deleteCourseList" parameterType="list">
+        delete from courselist where id in
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <update id="updateCourseList" parameterType="courseList">
+        update courselist set courseName=#{courseName},credit=#{credit},address=#{address},majorId=#{majorId} where id=#{id}
+    </update>
+</mapper>

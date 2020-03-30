@@ -1,0 +1,298 @@
+<div class="easyui-layout" data-options="fit:true">
+    <div data-options="region:'center',border:false">
+        <!-- Begin of toolbar -->
+        <div id="wu-toolbar2">
+            <div class="wu-toolbar2-button">
+                <a href="#" class="easyui-linkbutton" iconCls="icon-add" onclick="openAdd()" plain="true">添加</a>
+                <a href="#" class="easyui-linkbutton" iconCls="icon-edit" onclick="openEdit()" plain="true">修改</a>
+                <a href="#" class="easyui-linkbutton" iconCls="icon-remove" onclick="remove()" plain="true">删除</a>
+            </div>
+            <div class="wu-toolbar2-search">
+                <label>课程名：</label><input class="wu-text" style="width:100px" id="search1">
+                <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="doSearch()" id="doSearch1">开始检索</a>
+            </div>
+        </div>
+        <!-- End of toolbar -->
+        <table id="wu-datagrid2" toolbar="#wu-toolbar2"></table>
+    </div>
+</div>
+<!-- Begin of easyui-dialog -->
+<div id="wu-dialog2" class="easyui-dialog" data-options="closed:true,iconCls:'icon-save'"
+     style="width:400px; padding:10px;">
+    <form id="wu-form2" method="post">
+        <table>
+            <tr>
+                <!--加入隐藏域-->
+                <td><input type="text" name="id" hidden/></td>
+            </tr>
+            <tr>
+                <td width="60" align="right">课程名:</td>
+                <td><input type="text" name="courseName" class="wu-text"/></td>
+            </tr>
+            <tr>
+                <td align="right">学 分:</td>
+                <td><input type="text" name="credit" class="wu-text"/></td>
+            </tr>
+            <tr>
+                <td align="right">地 点:</td>
+                <td><input type="text" name="address" class="wu-text"/></td>
+            </tr>
+                <td align="right">专 业:</td>
+            <td><select type="text" name="majorId" id="major"></select></td>
+            </tr>
+        </table>
+    </form>
+</div>
+<!-- End of easyui-dialog -->
+<script type="text/javascript">
+    //用于嵌套页面调试动态脚本
+    //@ sourceURL=dynamicScript.js
+
+    var courseName = ""; //将查询条件设置成全局变量
+
+    $(function () {
+        getCourseList(); //进入页面立即调用
+    });
+
+    $("#doSearch1").click(function () {
+        courseName = $("#search1").val();
+        getCourseList(); //给查询条件赋上值后再调用getUserList
+    });
+
+
+    /**
+     * Name 载入菜单树
+     */
+    $('#wu-category-tree').tree({
+        url: 'temp/menu.php',
+        onClick: function (node) {
+            alert(node.text);
+        }
+    });
+
+    /**
+     * Name 添加记录
+     */
+    function adds() {
+        $.ajax({
+            url: '../addCourseList',
+            type:'post',
+            data:$('#wu-form2').serializeObject(),
+            headers:{"Authorization":"Bearer " + localStorage.getItem("token")},
+            success: function (data) {
+                success(data,"添加")
+            },
+            error:function (d) {
+                error(d)
+            }
+        });
+    }
+    $.fn.serializeObject = function () {
+        var o = {};
+        var a = this.serializeArray();
+        $.each(a, function () {
+            if (o[this.name]) {
+                if (!o[this.name].push) {
+                    o[this.name] = [o[this.name]];
+                }
+                o[this.name].push(this.value || '');
+            } else {
+                o[this.name] = this.value || '';
+            }
+        });
+        return o;
+    };
+    /**
+     * Name 修改记录
+     */
+    function edit() {
+        $.ajax({
+            url: '../updateCourseList',
+            data:$('#wu-form2').serializeObject(),
+            type:"post",
+            headers:{"Authorization":"Bearer " + localStorage.getItem("token")},
+            success: function (data) {
+                success(data,"修改")
+            },
+            error:function (d) {
+                error(d)
+            }
+        });
+    }
+
+
+    /**
+     * Name 删除记录
+     */
+    function remove() {
+        $.messager.confirm('信息提示', '确定要删除该记录？', function (result) {
+            if (result) {
+                var items = $('#wu-datagrid2').datagrid('getSelections');
+                var ids = []; //数组
+                $(items).each(function () {
+                    ids.push(this.id);//把选中的id放到ids数组的后面
+                    //push是从后面加 shift是从前面加
+                });
+                //alert(ids);return;
+                $.ajax({
+                    url: '../deleteCourseList',
+                    headers:{"Authorization":"Bearer " + localStorage.getItem("token")},
+                    data: {"ids": ids},
+                    type: 'post',
+                    traditional: true,
+                    success: function (data) {
+                        success(data,"删除")
+                    },
+                    error:function (d) {
+                        error(d)
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * Name 打开添加窗口
+     */
+    function openAdd() {
+        $('#wu-form2').form('clear'); //清空表单
+        $('#wu-dialog2').dialog({
+            closed: false,
+            resizable: true,//调整大小
+            modal: true,
+            title: "添加信息",
+            buttons: [{
+                text: '保存',
+                iconCls: 'icon-save',
+                handler: adds
+            }, {
+                text: '取消',
+                iconCls: 'icon-reload',
+                handler: function () {
+                    $('#wu-dialog2').dialog('close');
+                }
+            }]
+        });
+        $.ajax({
+            url:"../getMajorList",
+            headers:{"Authorization":"Bearer "+localStorage.getItem("token")},
+            type:"get",
+            success:function (d) {
+                console.log(d);
+                $("#major").empty();
+                $("#major").append("<option value=-1>请选择</option>");
+                for (let i=0;i<d.length;i++){
+                    let  option = "<option value='"+d[i].id+"'>"+d[i].majorName+"</option>";
+                    $("#major").append(option)
+                }
+            }
+        });
+
+    }
+
+
+    /**
+     * Name 打开修改窗口
+     */
+    function openEdit() {
+        $('#wu-form2').form('clear'); //清空表单
+        var item = $('#wu-datagrid2').datagrid('getSelections');//选中的数据量 这个语句要放在前面
+        if (item.length != 1) {
+            $.messager.alert('信息提示', '请选择一条数据', 'info');
+            return;
+        }
+        var item2 = $('#wu-datagrid2').datagrid('getSelected');//得到选中的那条数据
+        $.ajax({
+            url: '../getCourseByid',//请求后台 根据id拿到数据
+            type:'post',
+            headers:{"Authorization":"Bearer " + localStorage.getItem("token")},
+            data: {id: item2.id},
+            success: function (d) {
+                if (d.code === 1) {
+                    //绑定值
+                    $('#wu-form2').form('load', d.data)//用form里面的load方法加载数据
+                } else {
+                    $.messager.alert('信息提示', '取值失败', 'info');
+                    $('#wu-dialog2').dialog('close');
+                }
+            }
+        });
+        $('#wu-dialog2').dialog({
+            closed: false,
+            modal: true,
+            title: "修改信息",
+            buttons: [{
+                text: '确定',
+                iconCls: 'icon-ok',
+                handler: edit
+            }, {
+                text: '取消',
+                iconCls: 'icon-cancel',
+                handler: function () {
+                    $('#wu-dialog2').dialog('close');
+                }
+            }]
+        });
+
+    }
+
+    /**
+     * Name 载入数据
+     */
+    function getCourseList() {
+        $('#wu-datagrid2').datagrid({
+            url: '../getCourseListAllInOne',
+            headers: {'Authorization': localStorage.getItem("token")},
+            // loadFilter: pagerFilter,
+            // 不用前台分页用后台分页 确保每次拿到的数据都是最新数据
+            //从前台分页拿到的数据都是页面缓存的数据 可能造成脏数据
+            rownumbers: true,
+            singleSelect: false,
+            pageSize: 20,
+            pagination: true,
+            multiSort: true,
+            fitColumns: true,
+            queryParams: {courseName: courseName},//加入的查询参数对象默认为空
+            method: 'post',
+            fit: true,
+            columns: [[
+                {checkbox: true},
+                {field: 'id', title: 'id', width: 100, sortable: true},
+                {field: 'courseName', title: '课程', width: 100, sortable: true},
+                {field: 'credit', title: '学分', width: 100},
+                {field: 'address', title: '地点', width: 100},
+                {field: 'major.majorName', title: '专业', width: 100,formatter:function (value,row,index) {
+                        if (row.major){
+                            return row.major.majorName;
+                        }
+                    }}
+            ]],
+
+            onLoadError:function (d) {
+                console.log(d);
+                error(d)
+
+            }
+        });
+    }
+
+    function error(d) {
+        if (d.status===401){
+            $.messager.alert("操作提示","请重新登录！","error",function () {
+                window.location.href = "login.html"
+            })
+        } else if (d.status===500){
+            window.location.href = "500.html"
+        }
+    }
+
+    function success(data,info) {
+        if (data) {
+            $.messager.alert('信息提示', info+'成功！', 'info');
+            $('#wu-dialog2').dialog('close');
+            $("#wu-datagrid2").datagrid("reload");
+        } else {
+            $.messager.alert('信息提示', info+'失败！', 'info');
+        }
+    }
+</script>

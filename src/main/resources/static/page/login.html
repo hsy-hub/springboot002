@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>登录注册表单切换</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<script type="text/javascript" src="../js/jquery-1.11.1.min.js"></script>
+
+<link href="../css/style.css" rel="stylesheet" type="text/css" media="all" />
+
+</head>
+<body>
+
+<div class="main">
+	<h1>登录注册表单切换</h1>
+	<div class="w3_login">
+		<div class="w3_login_module">
+			<div class="module form-module">
+				<div class="toggle">
+					<i class="fa fa-times fa-pencil"></i>
+					<div class="tooltip">点击切换</div>
+				</div>
+				<div class="form">
+					<h2>登录账号</h2>
+					<form action="" method="post">
+						<input type="text" name="loginName" placeholder="用户名" required=" " />
+						<input type="password" name="password" placeholder="密码" required=" " />
+						<input type="button" id="login" value="登录" class="cta"/>
+					</form>
+				</div>
+				<div class="form">
+					<h2>创建一个账号</h2>
+					<form action="" method="post">
+						<input type="text" name="nloginName" placeholder="用户名" required=" " />
+						<input type="password" name="npassword" placeholder="密码" required=" " />
+						<input type="text" name="nstudentId" placeholder="学号" required=" " />
+						<input type="text" name="nnation" placeholder="民族" required=" " />
+						<input type="text" name="nbloodType" placeholder="血型" required=" " />
+						<input type="text" name="nemail" placeholder="邮箱" required=" " />
+						<input type="text" name="nlevelId" placeholder="权限" required=" " />
+						<input type="text" name="nmajorId" placeholder="专业" required=" " />
+						<input type="text" name="nclassId" placeholder="班级" required=" " />
+						<input type="text" name="ndepartmentId" placeholder="学院" required=" " />
+						<input type="button" id="register" value="注册" class="cta"/>
+					</form>
+				</div>
+				<div class="cta"><a href="#">忘记密码?</a></div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+$('.toggle').click(function(){
+	$(this).children('i').toggleClass('fa-pencil');
+	$('.form').animate({height: "toggle",'padding-top': 'toggle','padding-bottom': 'toggle',opacity: "toggle"}, "slow");
+});
+	//登录逻辑 提交方式1
+// $("#login").click(function () {
+// 	console.log("login");
+// 	var loginName = $("input[name='loginName']").val();
+// 	var password = $("input[name='password']").val();
+// 	$.ajax({
+// 		url:"../login",
+// 		data:{loginName:loginName,password:password},
+// 		type:'post',
+// 		success:function (d) {
+// 			console.log(d);
+// 			if (d)
+// 				window.location.href="success.html";
+// 			else
+// 				window.location.href="error.html";
+// 		}
+// 	})
+// });
+
+	//提交方式2
+$("#login").click(function () {
+	console.log("login");
+	var loginName = $("input[name='loginName']").val();
+	var password = $("input[name='password']").val();
+	var data = {loginName:loginName,password:password};
+	console.log(JSON.stringify(data));
+	$.ajax({
+		url:"../login",
+		data:JSON.stringify(data),
+		contentType:'application/json',
+		type:'post',
+		success:function (d) {
+			console.log(d);
+			if (d.code===1){
+				console.log(d.msg);
+				console.log(d.data);
+				console.log(d.token);
+				localStorage.setItem("token",d.token);//登录成功之后保存token
+				//如何把user信息存储为页面的全局信息
+				localStorage.setItem("user",JSON.stringify(d.data));
+				window.location.href="back.html";
+
+			}else{
+				console.log(d.msg);
+				console.log(d.data);
+				window.location.href="login.html";
+			}
+
+		},
+		error:function (d) {
+			if (d.status===401){
+				$.messager.alert("操作提示","请重新登录！","error",function () {
+					window.location.href = "login.html"
+				})
+			} else if (d.status===500){
+				window.location.href = "500.html"
+			}
+		}
+	})
+});
+
+	//注册
+$("#register").click(function () {
+	console.log("register");
+	var loginName = $("input[name='nloginName']").val();
+	var password = $("input[name='npassword']").val();
+	var studentId = $("input[name='nstudentId']").val();
+	var nation = $("input[name='nnation']").val();
+	var bloodType = $("input[name='nbloodType']").val();
+	var email = $("input[name='nemail']").val();
+	// var birthday = $("input[name='nbirthday']").val();
+	var levelId = $("input[name='nlevelId']").val();
+	var majorId = $("input[name='nmajorId']").val();
+	var classId = $("input[name='nclassId']").val();
+	var departmentId = $("input[name='ndepartmentId']").val();
+	var data = {loginName:loginName,password:password,studentId:studentId,
+		nation:nation,bloodType:bloodType,email:email,
+		levelId:levelId,majorId:majorId,classId:classId,departmentId:departmentId};
+	console.log(JSON.stringify(data));
+	$.ajax({
+		url:"../register",
+		data:data,
+		type:'post',
+		success:function (d) {
+			console.log(d);
+			if (d.code === 1) {
+				console.log(d.msg);
+				console.log(d.data);
+				alert("注册成功！")
+			}else{
+				console.log(d.msg);
+				console.log(d.data);
+				alert("注册失败！")
+			}
+		},
+		fail:function () {
+			console.log("fail")
+		}
+	})
+});
+</script>
+<div style="text-align:center;">
+<p>更多源码：<a href="http://www.mycodes.net/" target="_blank">源码之家</a></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.demo.mapper.UserMapper">
+    <sql id="sql">
+        select * from user
+    </sql>
+
+    <select id="login" parameterType="user" resultType="User">
+        <include refid="sql"/> where loginName=#{loginName} and password=#{password}
+    </select>
+
+    <resultMap id="userMap" type="user1">
+        <id property="id" column="id"></id>
+        <result property="loginName" column="loginName"></result>
+        <result property="password" column="password"></result>
+        <result property="studentId" column="studentId"></result>
+        <result property="nation" column="nation"></result>
+        <result property="bloodType" column="bloodType"></result>
+        <result property="email" column="email"></result>
+        <result property="birthday" column="birthday"></result>
+
+        <association property="level" javaType="level">
+            <id property="id" column="levelId"></id>
+            <result property="levelName" column="levelName"></result>
+        </association>
+        <association property="major" javaType="major">
+            <id property="id" column="majorId"></id>
+            <result property="majorName" column="majorName"></result>
+        </association>
+        <association property="class_" javaType="class_">
+            <id property="id" column="classId"></id>
+            <result property="className" column="className"></result>
+        </association>
+        <association property="department" javaType="department">
+        <id property="id" column="departmentId"></id>
+        <result property="departmentName" column="departmentName"></result>
+        </association>
+    </resultMap>
+
+    <select id="getUserListAllInOne" parameterType="userListParam" resultMap="userMap">
+        SELECT u.*,l.levelName,m.majorName,c.className,d.departmentName FROM USER AS u LEFT JOIN LEVEL AS l ON u.levelId = l.id
+        LEFT JOIN major AS m ON u.majorId = m.id left join class_ as c on u.classId = c.id LEFT JOIN department AS d ON u.`departmentId`=d.`id`
+        <where>
+            <if test="loginName != null and loginName != ''">
+                and loginName like '%${loginName}%'
+            </if>
+        </where>
+        limit #{pageStart},#{pagesize}
+    </select>
+
+    <insert id="register" parameterType="User">
+       insert into user value (null,#{loginName},#{password},#{studentId},#{nation},#{bloodType},#{email},#{levelId},#{majorId},#{classId},#{departmentId},null)
+    </insert>
+
+    <select id="selectCount" resultType="integer" parameterType="UserListParam">
+        select count(*) from user
+        <where>
+            <if test="loginName != null and loginName != ''">
+                and loginName like '%${loginName}%'
+            </if>
+        </where>
+    </select>
+
+    <delete id="deleteUser2" parameterType="list">
+        delete from user where id in
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <update id="updateUserList" parameterType="user">
+        update user set loginName=#{loginName},password=#{password},studentId=#{studentId},nation=#{nation},bloodType=#{bloodType},email=#{email},levelId=#{levelId},majorId=#{majorId},classId=#{classId},departmentId=#{departmentId} where id=#{id}
+    </update>
+
+    <select id="getlevelList" resultType="level">
+        select * from level
+    </select>
+    <select id="getmajorList" resultType="major">
+        select * from major
+    </select>
+    <select id="getclassList" resultType="class_">
+        select * from class_
+    </select>
+    <select id="getdepartmentList" resultType="department">
+        select * from department
+    </select>
+
+
+</mapper>
